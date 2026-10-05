@@ -1,0 +1,48 @@
+name: 'Review verdict notify'
+description: >-
+  Posts a pull_request_review verdict (approved / changes_requested) to a
+  Slack channel, linking the ticket id from the PR title or branch when there
+  is one. COMMENTED, DISMISSED and self-reviews stay silent; every other formal
+  verdict posts — this action is the one poster for the repositories calling it.
+author: 'Cancore'
+
+inputs:
+  slack-bot-token:
+    description: 'Slack bot token. Empty — the action exits silently, never a red job.'
+    required: false
+    default: ''
+  channel:
+    description: 'Slack channel ID to post to. Empty — the action exits silently, never a red job.'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Post the verdict to Slack
+      # Reads the payload file only (GITHUB_EVENT_PATH) — no PR-head code runs,
+      # and no event field is spliced into the script body. Best-effort: never
+      # a red job; posts top-level, not into a thread.
+      shell: bash
+      continue-on-error: true
+      env:
+        SLACK_BOT_TOKEN: ${{ inputs.slack-bot-token }}
+        CHANNEL: ${{ inputs.channel }}
+      run: |
+        TEXT=$(bash "$GITHUB_ACTION_PATH/decide.sh" "$GITHUB_EVENT_PATH")
+        [ -n "$TEXT" ] || exit 0
+        echo "$TEXT"
+        if [ -z "$SLACK_BOT_TOKEN" ]; then
+          echo "::warning::no SLACK_BOT_TOKEN configured — verdict notice not sent (not a red job)"
+          exit 0
+        fi
+        if [ -z "$CHANNEL" ]; then
+          echo "::warning::no channel input — verdict notice not sent (not a red job)"
+          exit 0
+        fi
+        PAYLOAD=$(jq -n --arg channel "$CHANNEL" --arg text "$TEXT" '{channel:$channel, text:$text}')
+        RESP=$(curl -sS -X POST https://slack.com/api/chat.postMessage \
+          -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+          -H "Content-Type: application/json; charset=utf-8" \
+          -d "$PAYLOAD") || RESP='{"ok":false,"error":"curl-network-error"}'
+        echo "$RESP" | jq -e '.ok' >/dev/null 2>&1 \
+          || echo "::warning::Slack chat.postMessage failed — error=$(echo "$RESP" | jq -r '.error // "unknown"' 2>/dev/null) (not a red job)"

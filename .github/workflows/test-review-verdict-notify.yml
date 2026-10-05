@@ -1,0 +1,28 @@
+# Fixture run of actions/review-verdict-notify/decide.sh: which payloads
+# notify and which stay silent. No Slack token here on purpose.
+name: review-verdict-notify tests
+
+on:
+  push:
+    paths:
+      - 'actions/review-verdict-notify/**'
+      - '.github/workflows/test-review-verdict-notify.yml'
+  pull_request:
+    paths:
+      - 'actions/review-verdict-notify/**'
+      - '.github/workflows/test-review-verdict-notify.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: decide.sh fixtures
+    # GitHub-hosted on purpose: this repository is public, and a self-hosted
+    # runner would execute code from fork pull requests.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - run: bash actions/review-verdict-notify/decide.test.sh
