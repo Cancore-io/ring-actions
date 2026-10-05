@@ -14,6 +14,7 @@ Pin by full commit sha:
 - uses: Cancore-io/ring-actions/actions/review-verdict-notify@<sha>
   with:
     slack-bot-token: ${{ secrets.SLACK_BOT_TOKEN }}
+    channel: <slack-channel-id>
 ```
 
-Without a token the action logs a warning and exits green.
+Without a token or a channel the action logs a warning and exits green.

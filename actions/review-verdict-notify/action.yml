@@ -12,9 +12,8 @@ inputs:
     required: false
     default: ''
   channel:
-    description: 'Slack channel ID to post to.'
-    required: false
-    default: 'C0ARCF83CTV'
+    description: 'Slack channel ID to post to. Empty — the action exits silently, never a red job.'
+    required: true
 
 runs:
   using: 'composite'
@@ -34,6 +33,10 @@ runs:
         echo "$TEXT"
         if [ -z "$SLACK_BOT_TOKEN" ]; then
           echo "::warning::no SLACK_BOT_TOKEN configured — verdict notice not sent (not a red job)"
+          exit 0
+        fi
+        if [ -z "$CHANNEL" ]; then
+          echo "::warning::no channel input — verdict notice not sent (not a red job)"
           exit 0
         fi
         PAYLOAD=$(jq -n --arg channel "$CHANNEL" --arg text "$TEXT" '{channel:$channel, text:$text}')
