@@ -18,12 +18,11 @@ AUTHOR=$(q .pull_request.user.login)
 if [ -n "$REVIEWER" ] && [ "$REVIEWER" = "$AUTHOR" ]; then
   echo "silent: self-review" >&2; exit 0
 fi
-# A ring-session verdict (marker on its own unquoted line) was already posted by
-# the review-verdict-log hook; a quoted marker is somebody else's words.
-if q .review.body | grep -v '^[[:space:]]*>' \
-  | grep -qE '^[[:space:]]*([-*][[:space:]]*)?\*\*(В|в)ердикт:\*\*[[:space:]]*одобрено[[:space:]]*$'; then
-  echo "silent: ring verdict, already delivered by the session hook" >&2; exit 0
-fi
+# No dedup here: nothing in the payload can prove an agent session already posted
+# the verdict (the payload is taken before the session's own hook runs), so this
+# action is the ONE poster for formal verdicts in the repositories that call it.
 ISSUE=$( { q .pull_request.title; q .pull_request.head.ref; } | grep -oE '(CAN|BUG)-[0-9]+' | head -1 || true)
-[ -n "$ISSUE" ] || { echo "silent: no ring ticket in PR title/branch" >&2; exit 0; }
-echo "$VERDICT ${REVIEWER:-ревьюер} — ${AUTHOR:-автор PR}, $(q .pull_request.html_url) ($ISSUE: https://linear.app/cancore/issue/$ISSUE)"
+# No ticket: the verdict still goes out, only the link is omitted.
+LINK=""; [ -n "$ISSUE" ] && LINK=" ($ISSUE: https://linear.app/cancore/issue/$ISSUE)"
+URL=$(q .pull_request.html_url); [ -n "$URL" ] || URL="PR #$(q .pull_request.number)"
+echo "$VERDICT ${REVIEWER:-ревьюер} — ${AUTHOR:-автор PR}, $URL$LINK"

@@ -1,9 +1,9 @@
 name: 'Review verdict notify'
 description: >-
   Posts a pull_request_review verdict (approved / changes_requested) to a
-  Slack channel, tagging the ticket id from the PR title or branch. COMMENTED,
-  DISMISSED, self-reviews, PRs without a ticket and verdicts already delivered
-  by the reviewing session stay silent.
+  Slack channel, linking the ticket id from the PR title or branch when there
+  is one. COMMENTED, DISMISSED and self-reviews stay silent; every other formal
+  verdict posts — this action is the one poster for the repositories calling it.
 author: 'Cancore'
 
 inputs:

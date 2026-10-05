@@ -16,9 +16,11 @@ check "changes_requested notifies" notify "{\"action\":\"submitted\",\"review\":
 check "commented is silent" silent "{\"action\":\"submitted\",\"review\":{\"state\":\"commented\",\"user\":{\"login\":\"rev\"}},$pr}"
 check "dismissed is silent" silent "{\"action\":\"dismissed\",\"review\":{\"state\":\"dismissed\",\"user\":{\"login\":\"rev\"}},$pr}"
 check "self-review is silent" silent "{\"action\":\"submitted\",\"review\":{\"state\":\"approved\",\"user\":{\"login\":\"author\"}},$pr}"
-check "ring marker is silent" silent "{\"action\":\"submitted\",\"review\":{\"state\":\"approved\",\"user\":{\"login\":\"rev\"},\"body\":\"## Ревью\\n- **Вердикт:** одобрено\\nhead abc\"},$pr}"
-check "quoted marker notifies" notify "{\"action\":\"submitted\",\"review\":{\"state\":\"changes_requested\",\"user\":{\"login\":\"rev\"},\"body\":\"> - **Вердикт:** одобрено\\nнет\"},$pr}"
-check "no ticket is silent" silent '{"action":"submitted","review":{"state":"approved","user":{"login":"rev"}},"pull_request":{"title":"x","head":{"ref":"feat"},"user":{"login":"a"}}}'
+check "verified ring approve (marker) posts — receiver is the one poster" notify "{\"action\":\"submitted\",\"review\":{\"state\":\"approved\",\"user\":{\"login\":\"rev\"},\"body\":\"## Ревью\\n<!-- REVIEW-VERIFICATION {\\\"v\\\":1} -->\\n\"},$pr}"
+check "verified ring changes_requested (marker) posts" notify "{\"action\":\"submitted\",\"review\":{\"state\":\"changes_requested\",\"user\":{\"login\":\"rev\"},\"body\":\"x\\n<!-- REVIEW-VERIFICATION {\\\"v\\\":1} -->\"},$pr}"
+check "quoted marker notifies" notify "{\"action\":\"submitted\",\"review\":{\"state\":\"changes_requested\",\"user\":{\"login\":\"rev\"},\"body\":\"> <!-- REVIEW-VERIFICATION {\\\"v\\\":1} -->\\nнет\"},$pr}"
+check "comment-channel marker posts" notify "{\"action\":\"submitted\",\"review\":{\"state\":\"approved\",\"user\":{\"login\":\"rev\"},\"body\":\"- **Вердикт:** одобрено\"},$pr}"
+check "no ticket still notifies (no link)" notify '{"action":"submitted","review":{"state":"approved","user":{"login":"rev"}},"pull_request":{"title":"x","head":{"ref":"feat"},"user":{"login":"a"}}}'
 check "garbage payload is silent" silent 'not json'
 rm -f "$tmp"
 exit $fail
